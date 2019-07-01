@@ -42,7 +42,7 @@ reader = csv.reader(open("data.csv", "r"), delimiter=",")
 result = np.array(list(reader))
 
 # Refactor data
-X = np.array(list(map(lambda x: to_int(re.findall(r'\d', x[0])), result)))
+X = np.array(list(map(lambda x: to_int(re.findall(r'\d', '{0:08b}'.format(int(x[0])))), result)))
 Y = np.array(convert_labels_to_integers(result[:,1]))
 
 pdb.set_trace()
