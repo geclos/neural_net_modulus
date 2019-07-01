@@ -1,4 +1,3 @@
-import pdb
 import re
 import csv
 import math
@@ -51,21 +50,46 @@ def create_placeholders(n_x, n_y):
 
 # INITIALIZE PARAMATERS
 def initialize_parameters():
-    W1 = tf.compat.v1.get_variable("W1", [23,8], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
-    b1 = tf.compat.v1.get_variable("b1", [23,1], initializer = tf.zeros_initializer())
+    W1 = tf.compat.v1.get_variable("W1", [92,8], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b1 = tf.compat.v1.get_variable("b1", [92,1], initializer = tf.zeros_initializer())
+    W2 = tf.compat.v1.get_variable("W2", [46,92], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b2 = tf.compat.v1.get_variable("b2", [46,1], initializer = tf.zeros_initializer())
+    W3 = tf.compat.v1.get_variable("W3", [23,46], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b3 = tf.compat.v1.get_variable("b3", [23,1], initializer = tf.zeros_initializer())
 
-    parameters = { "W1": W1, "b1": b1 }
+    parameters = { "W1": W1, "b1": b1, "W2": W2, "b2": b2, "W3": W3, "b3": b3 }
 
     return parameters
 
 # FORWARD PROPAGATION
 def forward_propagation(X, parameters):
+    """
+    Implements the forward propagation for the model: LINEAR -> RELU -> LINEAR -> RELU -> LINEAR -> SOFTMAX
+
+    Arguments:
+    X -- input dataset placeholder, of shape (input size, number of examples)
+    parameters -- python dictionary containing your parameters "W1", "b1", "W2", "b2", "W3", "b3"
+                  the shapes are given in initialize_parameters
+
+    Returns:
+    Z3 -- the output of the last LINEAR unit
+    """
+
+    # Retrieve the parameters from the dictionary "parameters"
     W1 = parameters['W1']
     b1 = parameters['b1']
+    W2 = parameters['W2']
+    b2 = parameters['b2']
+    W3 = parameters['W3']
+    b3 = parameters['b3']
 
     Z1 = tf.add(tf.matmul(W1, X), b1)
+    A1 = tf.nn.relu(Z1)
+    Z2 = tf.add(tf.matmul(W2, A1), b2)
+    A2 = tf.nn.relu(Z2)
+    Z3 = tf.add(tf.matmul(W3, A2), b3)
 
-    return Z1
+    return Z3
 
 # COMPUTE COST
 def compute_cost(Z1, Y):
@@ -216,11 +240,9 @@ result = np.array(list(reader))
 X = np.array(list(map(lambda x: to_int(re.findall(r'\d', x[0])), result)))
 Y = np.array(convert_labels_to_integers(result[:,1]))
 
-pdb.set_trace()
-
 # Extract train and test sets
-X_train = X[:9000].reshape((8, 9000))
-X_test = X[9001:].reshape((8, 1000))
+X_test = X[9001:].reshape((8, 1000)) / 9.0
+X_train = X[:9000].reshape((8, 9000)) / 9.0
 Y_train = Y[:9000].reshape((23, 9000))
 Y_test = Y[9001:].reshape((23, 1000))
 
