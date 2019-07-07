@@ -6,7 +6,9 @@ import tensorflow as tf
 from tensorflow import keras
 
 def to_int(arr):
-    return list(map(lambda val: int(val), arr))
+    result = np.array(list(map(lambda val: int(val), arr)))
+    size = 8 - result.size
+    return np.concatenate((np.zeros(size), result))
 
 def convert_labels_to_integers(labels):
     labels_dict = {
@@ -42,19 +44,18 @@ reader = csv.reader(open("data.csv", "r"), delimiter=",")
 result = np.array(list(reader))
 
 # Refactor data
-X = np.array(list(map(lambda x: to_int(re.findall(r'\d', '{0:08b}'.format(int(x[0])))), result)))
+X = np.array(list(map(lambda x: keras.utils.to_categorical(to_int(re.findall(r'\d', x[0])), num_classes=10), result)))
 Y = np.array(convert_labels_to_integers(result[:,1]))
 
-pdb.set_trace()
-
 # Extract train and test sets
-X_train = X[:9000].reshape((9000, 8))
-X_test = X[9001:].reshape((1000, 8))
-Y_train = Y[:9000].reshape((9000, 1))
-Y_test = Y[9001:].reshape((1000, 1))
+X_train = X[:9000, :, :]
+X_test = X[9001:, :, :]
+Y_train = Y[:9000]
+Y_test = Y[9001:]
 
 model = keras.Sequential([
-    keras.layers.Dense(184, activation='relu', input_shape=(8,)),
+    keras.layers.Flatten(input_shape=(8, 10)),
+    keras.layers.Dense(184, activation='relu'),
     keras.layers.Dense(92, activation='relu'),
     keras.layers.Dense(46, activation='relu'),
     keras.layers.Dense(23, activation='softmax')
@@ -66,4 +67,8 @@ model.compile(
     metrics=['accuracy']
 )
 
-model.fit(X_train, Y_train, epochs=10)
+model.fit(X_train, Y_train, epochs=60)
+results = model.evaluate(X_test, Y_test)
+
+print(results)
+
